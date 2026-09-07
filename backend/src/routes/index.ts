@@ -1,0 +1,45 @@
+import { Router } from 'express';
+import healthRoutes from './healthRoutes.js';
+import authRoutes from './authRoutes.js';
+import userRoutes from './userRoutes.js';
+import applicationRoutes from './applicationRoutes.js';
+import projectRoutes from './projectRoutes.js';
+import issueRoutes from './issueRoutes.js';
+import commentRoutes from './commentRoutes.js';
+import attachmentRoutes from './attachmentRoutes.js';
+import notificationRoutes from './notificationRoutes.js';
+import dashboardRoutes from './dashboardRoutes.js';
+import teamRoutes from './teamRoutes.js';
+import routingRoutes from './routingRoutes.js';
+import aiRoutes from './aiRoutes.js';
+import triageRoutes from './triageRoutes.js';
+import commandCenterRoutes from './commandCenterRoutes.js';
+import incidentRoutes from './incidentRoutes.js';
+import analyticsRoutes from './analyticsRoutes.js';
+import operationsRoutes from './operationsRoutes.js';
+import { authenticateToken } from '../middlewares/auth.js';
+import { escalateIssue } from '../controllers/incidentController.js';
+
+const apiRouter = Router();
+
+apiRouter.use('/', healthRoutes);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/users', userRoutes);
+apiRouter.use('/applications', applicationRoutes);
+apiRouter.use('/projects', projectRoutes);
+apiRouter.post('/issues/:id/escalate', authenticateToken, escalateIssue);
+apiRouter.use('/issues', triageRoutes);
+apiRouter.use('/issues', aiRoutes);
+apiRouter.use('/issues', routingRoutes);
+apiRouter.use('/issues', issueRoutes);
+apiRouter.use('/comments', commentRoutes);
+apiRouter.use('/attachments', attachmentRoutes);
+apiRouter.use('/notifications', notificationRoutes);
+apiRouter.use('/dashboard', dashboardRoutes);
+apiRouter.use('/team', teamRoutes);
+apiRouter.use('/command-center', commandCenterRoutes);
+apiRouter.use('/incidents', incidentRoutes);
+apiRouter.use('/analytics', analyticsRoutes);
+apiRouter.use('/operations', operationsRoutes);
+
+export default apiRouter;

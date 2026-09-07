@@ -1,0 +1,28 @@
+{
+  "name": "app-issue-track-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Applications Issue Tracking System Monorepo",
+  "workspaces": [
+    "shared",
+    "database",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "build": "npm run build --workspace=shared && npm run build --workspace=backend && npm run build --workspace=frontend",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,prisma}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,prisma}\"",
+    "db:generate": "npm run db:generate --workspace=database",
+    "db:migrate": "npm run db:migrate --workspace=database",
+    "db:seed": "npm run db:seed --workspace=database",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prettier": "^3.5.2",
+    "typescript": "^5.7.3"
+  }
+}

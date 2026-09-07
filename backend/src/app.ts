@@ -1,0 +1,77 @@
+import express, { Express, Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import path from 'path';
+import { env } from './config/env.js';
+import apiRouter from './routes/index.js';
+import { errorHandler, ApiError } from './middlewares/errorHandler.js';
+import { requestContext } from './middlewares/requestContext.js';
+import { requestLogger } from './middlewares/requestLogger.js';
+
+const app: Express = express();
+
+// ── Security HTTP Headers (Helmet) ──────────────────────────
+// Helmet sets X-Content-Type-Options, X-Frame-Options, Referrer-Policy,
+// X-XSS-Protection, Strict-Transport-Security, etc.
+app.use(
+  helmet({
+    // CSP: permit same-origin + Vite dev CDNs. Tighten in production.
+    contentSecurityPolicy: env.NODE_ENV === 'production'
+      ? undefined // Use helmet's strict defaults in production
+      : false,    // Disable CSP in development to not break Vite HMR
+    crossOriginEmbedderPolicy: false, // Allows Recharts SVGs to load
+  })
+);
+
+// Add cache-control for sensitive API responses
+app.use('/api', (_req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  next();
+});
+
+// ── CORS ─────────────────────────────────────────────────────
+// Development: allow configured localhost origin.
+// Production: only explicitly configured CORS_ORIGIN. Never wildcard with credentials.
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowed = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+      // Allow same-origin / server-to-server (no origin header)
+      if (!origin) return callback(null, true);
+      if (allowed.includes(origin)) return callback(null, true);
+      return callback(new Error(`CORS: Origin '${origin}' is not allowed`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+    exposedHeaders: ['X-Request-ID'],
+  })
+);
+
+// ── Body Parsers ─────────────────────────────────────────────
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ── Request Correlation ───────────────────────────────────────
+// Generates/validates X-Request-ID and attaches req.requestId
+app.use(requestContext);
+
+// ── Request Observability Logger ─────────────────────────────
+// Records method/route/status/duration → metricsService
+app.use(requestLogger);
+
+// ── Static Uploads ────────────────────────────────────────────
+app.use('/uploads', express.static(path.join(process.cwd(), env.UPLOAD_DIR)));
+
+// ── API Routes ────────────────────────────────────────────────
+app.use('/api/v1', apiRouter);
+
+// ── 404 Handler ───────────────────────────────────────────────
+app.use('*', (_req: Request, _res: Response, next: NextFunction) => {
+  next(ApiError.notFound('Requested API route does not exist'));
+});
+
+// ── Centralized Error Handler ─────────────────────────────────
+app.use(errorHandler);
+
+export default app;
