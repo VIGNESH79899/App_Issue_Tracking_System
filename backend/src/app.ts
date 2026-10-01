@@ -21,12 +21,9 @@ if (env.NODE_ENV === 'production') {
 // X-XSS-Protection, Strict-Transport-Security, etc.
 app.use(
   helmet({
-    // CSP: permit same-origin + Vite dev CDNs. Tighten in production.
-    contentSecurityPolicy: env.NODE_ENV === 'production'
-      ? undefined // Use helmet's strict defaults in production
-      : false,    // Disable CSP in development to not break Vite HMR
-    crossOriginEmbedderPolicy: false, // Allows Recharts SVGs to load
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows uploaded attachments/images to load on cross-origin frontends
+    contentSecurityPolicy: false, // Disable CSP to allow Vite scripts, styles, and SVG icons to execute seamlessly
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
   })
 );
 
