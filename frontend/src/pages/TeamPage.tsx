@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { teamApi, TeamMemberDTO } from '../services/teamApi';
 import { SkeletonLoader } from '../components/common/SkeletonLoader';
 import { ErrorState } from '../components/common/ErrorState';
@@ -100,25 +101,65 @@ export const TeamPage: React.FC = () => {
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-semibold text-slate-500 uppercase tracking-wider">
+                      Workload Capacity
+                    </span>
+                    <span className={`font-mono font-bold ${
+                      member.activeIssuesCount >= 5
+                        ? 'text-rose-600'
+                        : member.activeIssuesCount >= 3
+                        ? 'text-amber-600'
+                        : 'text-emerald-600'
+                    }`}>
+                      {member.activeIssuesCount} issues ({member.activeIssuesCount >= 5 ? 'High' : member.activeIssuesCount >= 3 ? 'Moderate' : 'Optimal'})
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        member.activeIssuesCount >= 5
+                          ? 'bg-rose-500'
+                          : member.activeIssuesCount >= 3
+                          ? 'bg-amber-500'
+                          : 'bg-emerald-500'
+                      }`}
+                      style={{ width: `${Math.min(100, Math.max(10, (member.activeIssuesCount / 6) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 space-y-2 text-xs">
                   <span className="text-[11px] font-semibold text-slate-500 block uppercase tracking-wider">
                     Assigned Projects ({member.projects.length})
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {member.projects.map((p) => (
-                      <span
-                        key={p.id}
-                        className="bg-brand-50 border border-brand-200 text-brand-700 font-mono text-[11px] px-2 py-0.5 rounded font-semibold"
-                      >
-                        {p.key}
-                      </span>
-                    ))}
+                    {member.projects.length === 0 ? (
+                      <span className="text-slate-400 italic text-[11px]">No projects assigned</span>
+                    ) : (
+                      member.projects.map((p) => (
+                        <span
+                          key={p.id}
+                          className="bg-brand-50 border border-brand-200 text-brand-700 font-mono text-[11px] px-2 py-0.5 rounded font-semibold"
+                        >
+                          {p.key}
+                        </span>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Active Workload</span>
-                <span className="font-bold text-slate-900 font-mono">{member.activeIssuesCount} active issues</span>
+                <Link
+                  to={`/issues?assigneeId=${member.userId}`}
+                  className="text-brand-600 hover:text-brand-800 font-bold transition-colors"
+                >
+                  View Assigned Issues →
+                </Link>
+                <span className="font-mono text-[11px] text-slate-400">
+                  Joined {new Date(member.joinedAt).toLocaleDateString()}
+                </span>
               </div>
             </div>
           ))}

@@ -58,7 +58,10 @@ export const NotificationsPage: React.FC = () => {
     }
   };
 
+  const [filter, setFilter] = useState<'ALL' | 'UNREAD'>('ALL');
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const filteredNotifications = filter === 'UNREAD' ? notifications.filter((n) => !n.isRead) : notifications;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -69,26 +72,50 @@ export const NotificationsPage: React.FC = () => {
             System alerts for issue assignments, status transitions, and discussions
           </p>
         </div>
-        {unreadCount > 0 && (
-          <Button size="sm" variant="outline" onClick={handleMarkAllRead} leftIcon={<CheckCheck className="w-4 h-4" />}>
-            Mark All as Read
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <Button size="sm" variant="outline" onClick={handleMarkAllRead} leftIcon={<CheckCheck className="w-4 h-4" />}>
+              Mark All as Read
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Filter Chips */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setFilter('ALL')}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+            filter === 'ALL'
+              ? 'bg-slate-900 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          All ({notifications.length})
+        </button>
+        <button
+          onClick={() => setFilter('UNREAD')}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+            filter === 'UNREAD'
+              ? 'bg-slate-900 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          Unread ({unreadCount})
+        </button>
       </div>
 
       {isLoading ? (
         <SkeletonLoader rows={5} height="h-16" />
       ) : error ? (
         <ErrorState message={error} onRetry={loadNotifications} />
-      ) : notifications.length === 0 ? (
-        <EmptyState
-          title="Inbox empty"
-          description="You have no notifications in your inbox at this time."
-          icon={<Bell className="w-8 h-8" />}
-        />
+      ) : filteredNotifications.length === 0 ? (
+        <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-xs text-slate-500">
+          No notifications match the selected filter.
+        </div>
       ) : (
         <div className="bg-white rounded-lg border border-slate-200 shadow-subtle divide-y divide-slate-100 overflow-hidden">
-          {notifications.map((n) => (
+          {filteredNotifications.map((n) => (
             <div
               key={n.id}
               onClick={() => handleNotificationClick(n)}

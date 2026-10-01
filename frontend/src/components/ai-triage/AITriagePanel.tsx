@@ -28,11 +28,16 @@ export const AITriagePanel: React.FC<AITriagePanelProps> = ({
   return (
     <div className="space-y-5 bg-slate-50/50 p-4 border border-slate-200 rounded-xl shadow-subtle">
       {/* Header Banner */}
-      <div className="flex items-center space-x-2 border-b border-slate-200 pb-3">
-        <Sparkles className="w-4 h-4 text-brand-600" />
-        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-          AI Engineering Triage & Quality Intelligence
-        </h3>
+      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div className="flex items-center space-x-2">
+          <Sparkles className="w-4 h-4 text-brand-600" />
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            AI Engineering Triage & Quality
+          </h3>
+        </div>
+        <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 rounded uppercase">
+          AI Suggestion · Advisory
+        </span>
       </div>
 
       {/* Quality Score */}

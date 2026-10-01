@@ -10,7 +10,7 @@ dotenv.config();
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(5000),
-  HOST: z.string().default('localhost'),
+  HOST: z.string().default('0.0.0.0'),
   DATABASE_URL: z.string().default('postgresql://postgres:postgres@localhost:5432/app_issue_track?schema=public'),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters').default('super-secret-jwt-key-replace-in-production-minimum-32-chars'),
   JWT_EXPIRES_IN: z.string().default('1d'),

@@ -1,32 +1,35 @@
 import React from 'react';
 import { IssueStatus } from '@app-issue-track/shared';
+import { statusColors } from './designSystem';
 
 interface StatusBadgeProps {
   status: IssueStatus | string;
+  size?: 'sm' | 'md';
+  showDot?: boolean;
 }
 
-const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
-  [IssueStatus.OPEN]: { label: 'Open', bg: 'bg-blue-100', text: 'text-blue-800' },
-  [IssueStatus.ASSIGNED]: { label: 'Assigned', bg: 'bg-indigo-100', text: 'text-indigo-800' },
-  [IssueStatus.IN_PROGRESS]: { label: 'In Progress', bg: 'bg-amber-100', text: 'text-amber-800' },
-  [IssueStatus.RESOLVED]: { label: 'Resolved', bg: 'bg-emerald-100', text: 'text-emerald-800' },
-  [IssueStatus.VERIFIED]: { label: 'Verified', bg: 'bg-teal-100', text: 'text-teal-800' },
-  [IssueStatus.CLOSED]: { label: 'Closed', bg: 'bg-gray-100', text: 'text-gray-800' },
-  [IssueStatus.REOPENED]: { label: 'Reopened', bg: 'bg-rose-100', text: 'text-rose-800' },
-};
-
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  const config = statusConfig[status] || {
-    label: status,
-    bg: 'bg-gray-100',
-    text: 'text-gray-800',
+export const StatusBadge: React.FC<StatusBadgeProps> = ({
+  status,
+  size = 'md',
+  showDot = true,
+}) => {
+  const color = statusColors[status as keyof typeof statusColors] || {
+    badge: 'bg-slate-100 text-slate-700 border-slate-200',
+    dot: 'bg-slate-400',
+    label: status.replace('_', ' '),
   };
+
+  const sizeClasses =
+    size === 'sm'
+      ? 'px-1.5 py-0.5 text-[10px]'
+      : 'px-2 py-0.5 text-[11px]';
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${config.bg} ${config.text}`}
+      className={`inline-flex items-center gap-1.5 rounded font-medium border ${color.badge} ${sizeClasses} whitespace-nowrap`}
     >
-      {config.label}
+      {showDot && <span className={`w-1.5 h-1.5 rounded-full ${color.dot} shrink-0`} />}
+      <span>{color.label}</span>
     </span>
   );
 };

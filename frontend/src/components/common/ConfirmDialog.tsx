@@ -8,11 +8,12 @@ export interface ConfirmDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  message: string;
+  message: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   isDanger?: boolean;
   isLoading?: boolean;
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -25,16 +26,25 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   cancelText = 'Cancel',
   isDanger = false,
   isLoading = false,
+  maxWidth = 'md',
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="sm">
-      <div className="flex items-start space-x-3">
-        <div className={`p-2 rounded-full flex-shrink-0 ${isDanger ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth={maxWidth}>
+      <div className="flex items-start space-x-3.5">
+        <div
+          className={`p-2.5 rounded-xl flex-shrink-0 mt-0.5 border ${
+            isDanger
+              ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-xs'
+              : 'bg-amber-50 border-amber-200 text-amber-600 shadow-xs'
+          }`}
+        >
           <AlertTriangle className="w-5 h-5" />
         </div>
-        <div className="text-sm text-slate-600 leading-relaxed">{message}</div>
+        <div className="flex-1 min-w-0 text-sm text-slate-600 leading-relaxed break-words [overflow-wrap:anywhere]">
+          {message}
+        </div>
       </div>
-      <div className="flex items-center justify-end space-x-3 mt-6">
+      <div className="flex items-center justify-end space-x-3 mt-6 pt-4 border-t border-slate-100">
         <Button variant="outline" size="sm" onClick={onClose} disabled={isLoading}>
           {cancelText}
         </Button>

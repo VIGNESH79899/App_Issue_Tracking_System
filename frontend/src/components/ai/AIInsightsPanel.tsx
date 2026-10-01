@@ -113,6 +113,9 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ issueId }) => 
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
             AI Issue Intelligence
           </h3>
+          <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 rounded uppercase">
+            AI Suggestion · Advisory
+          </span>
         </div>
         <Button
           size="sm"

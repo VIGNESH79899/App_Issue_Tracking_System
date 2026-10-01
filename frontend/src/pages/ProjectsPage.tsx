@@ -165,28 +165,45 @@ export const ProjectsPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((proj) => (
-            <div key={proj.id} className="bg-white p-5 rounded-lg border border-slate-200 shadow-subtle flex flex-col justify-between space-y-3">
+            <div key={proj.id} className="bg-white p-5 rounded-lg border border-slate-200 shadow-subtle flex flex-col justify-between space-y-4 hover:border-slate-300 transition-colors">
               <div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
+                    <span className="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
                       {proj.key}
                     </span>
-                    <h3 className="font-bold text-slate-900 text-base truncate">{proj.name}</h3>
+                    <h3 className="font-bold text-slate-900 text-sm truncate max-w-[180px]">{proj.name}</h3>
                   </div>
                   {canManage && (
-                    <button onClick={() => setDeleteProjectId(proj.id)} className="p-1 text-slate-400 hover:text-rose-600 rounded">
+                    <button
+                      onClick={() => setDeleteProjectId(proj.id)}
+                      className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
+                      title="Delete Project"
+                    >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
-                <p className="text-xs text-slate-600 mt-2 line-clamp-2">{proj.description || 'No project description.'}</p>
+                <p className="text-xs text-slate-600 mt-2.5 line-clamp-2 leading-relaxed">
+                  {proj.description || 'No project description provided.'}
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-[11px] font-medium text-slate-500">Application:</span>
+                  <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
+                    {proj.applicationName || 'Default'}
+                  </span>
+                </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs text-slate-500">App: <span className="font-semibold text-slate-700">{proj.applicationName || 'Default'}</span></span>
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                <a
+                  href={`/issues?projectId=${proj.id}`}
+                  className="inline-flex items-center text-xs font-bold text-brand-600 hover:text-brand-800 transition-colors"
+                >
+                  View Issues →
+                </a>
                 <Button variant="outline" size="sm" onClick={() => handleOpenMembersModal(proj)} leftIcon={<Users className="w-3 h-3" />}>
-                  Team Members
+                  Members
                 </Button>
               </div>
             </div>

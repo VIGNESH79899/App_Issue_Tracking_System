@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import { ApiResponse } from '@app-issue-track/shared';
 
 export interface SystemDependencies {
   database: { status: string; latencyMs: number };
@@ -61,24 +62,27 @@ export interface SecurityEvent {
   message: string;
 }
 
+export interface OperationsMetricsSummary extends SystemMetrics {
+  endpointStats: EndpointStat[];
+  uptimeSeconds: number;
+  startedAt: string;
+}
+
 export const operationsApi = {
   async getOverview(): Promise<OperationsOverview> {
-    const res = await apiClient.get('/operations/overview');
-    return res.data.data;
+    const res = await apiClient.get<never, ApiResponse<OperationsOverview>>('/operations/overview');
+    if (!res.data) throw new Error('Operations overview response missing data payload');
+    return res.data;
   },
 
-  async getMetrics(): Promise<ReturnType<typeof metricsShapeOf>> {
-    const res = await apiClient.get('/operations/metrics');
-    return res.data.data;
+  async getMetrics(): Promise<OperationsMetricsSummary> {
+    const res = await apiClient.get<never, ApiResponse<OperationsMetricsSummary>>('/operations/metrics');
+    if (!res.data) throw new Error('Operations metrics response missing data payload');
+    return res.data;
   },
 
   async getSecurityEvents(limit = 50): Promise<SecurityEvent[]> {
-    const res = await apiClient.get(`/operations/security-events?limit=${limit}`);
-    return res.data.data;
+    const res = await apiClient.get<never, ApiResponse<SecurityEvent[]>>(`/operations/security-events?limit=${limit}`);
+    return res.data || [];
   },
 };
-
-// Type helper — not executed
-function metricsShapeOf() {
-  return {} as SystemMetrics & { endpointStats: EndpointStat[]; uptimeSeconds: number; startedAt: string };
-}

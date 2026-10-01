@@ -17,6 +17,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,prisma}\"",
     "db:generate": "npm run db:generate --workspace=database",
     "db:migrate": "npm run db:migrate --workspace=database",
+    "db:deploy": "npm run db:deploy --workspace=database",
     "db:seed": "npm run db:seed --workspace=database",
     "test": "npm run test --workspaces --if-present"
   },

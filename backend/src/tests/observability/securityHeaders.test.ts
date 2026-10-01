@@ -30,13 +30,14 @@ describe('AITS Phase 9 — Security Headers', () => {
   });
 
   it('5. Malicious X-Request-ID (injection attempt) must be sanitized', async () => {
-    const malicious = 'bad\ninjection\r\ncontent';
+    const malicious = 'bad<script>alert(1)</script>';
     const res = await request(app)
       .get('/api/v1/health')
       .set('X-Request-ID', malicious);
     // Header was replaced with a safe UUID
-    expect(res.headers['x-request-id']).not.toContain('\n');
-    expect(res.headers['x-request-id']).not.toContain('\r');
+    expect(res.headers['x-request-id']).not.toBe(malicious);
+    expect(res.headers['x-request-id']).not.toContain('<script>');
+    expect(res.headers['x-request-id'].length).toBeGreaterThan(10);
   });
 
   it('6. API responses must include Cache-Control: no-store for /api routes', async () => {

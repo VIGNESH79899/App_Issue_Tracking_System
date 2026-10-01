@@ -10,6 +10,11 @@ import { requestLogger } from './middlewares/requestLogger.js';
 
 const app: Express = express();
 
+// Trust reverse proxy (Nginx / ALB / Cloudflare / Render) in production
+if (env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // ── Security HTTP Headers (Helmet) ──────────────────────────
 // Helmet sets X-Content-Type-Options, X-Frame-Options, Referrer-Policy,
 // X-XSS-Protection, Strict-Transport-Security, etc.

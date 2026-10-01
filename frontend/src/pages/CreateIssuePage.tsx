@@ -185,19 +185,33 @@ export const CreateIssuePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Step Indicator */}
-      <div className="grid grid-cols-4 gap-2 text-center text-xs font-bold font-mono">
-        <div className={`p-2 rounded border ${step === 1 ? 'bg-brand-600 text-white border-brand-600' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-          1. Scope & Basic Info
+      {/* Step Indicator & Progress */}
+      <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-subtle space-y-2">
+        <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+          <span className="flex items-center gap-1.5">
+            <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-[10px] font-mono font-bold">
+              {step}
+            </span>
+            <span className="font-bold text-slate-900">
+              {step === 1 && 'Step 1 of 4: Scope & Identity'}
+              {step === 2 && 'Step 2 of 4: Technical Context & Details'}
+              {step === 3 && 'Step 3 of 4: AI Engineering Triage & Quality'}
+              {step === 4 && 'Step 4 of 4: Final Review & Confirmation'}
+            </span>
+          </span>
+          <span className="font-mono text-[11px] text-slate-500">{step * 25}% Complete</span>
         </div>
-        <div className={`p-2 rounded border ${step === 2 ? 'bg-brand-600 text-white border-brand-600' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-          2. Technical Context
+        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div
+            className="bg-brand-600 h-full transition-all duration-300 rounded-full"
+            style={{ width: `${step * 25}%` }}
+          />
         </div>
-        <div className={`p-2 rounded border ${step === 3 ? 'bg-brand-600 text-white border-brand-600' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-          3. AI Triage & Quality
-        </div>
-        <div className={`p-2 rounded border ${step === 4 ? 'bg-brand-600 text-white border-brand-600' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-          4. Review & Submit
+        <div className="grid grid-cols-4 gap-2 pt-1 text-center text-[11px] font-medium text-slate-500">
+          <span className={step >= 1 ? 'text-brand-600 font-bold' : ''}>1. Scope</span>
+          <span className={step >= 2 ? 'text-brand-600 font-bold' : ''}>2. Context</span>
+          <span className={step >= 3 ? 'text-brand-600 font-bold' : ''}>3. AI Triage</span>
+          <span className={step >= 4 ? 'text-brand-600 font-bold' : ''}>4. Review</span>
         </div>
       </div>
 
@@ -205,7 +219,10 @@ export const CreateIssuePage: React.FC = () => {
         {/* STEP 1: SCOPE & BASIC INFO */}
         {step === 1 && (
           <div className="space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Step 1: Scope & Basic Info</h3>
+            <div className="border-b border-slate-100 pb-2">
+              <h3 className="text-sm font-bold text-slate-900">Scope & Project Identity</h3>
+              <p className="text-xs text-slate-500">Target application and project repository for this issue</p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
@@ -388,36 +405,56 @@ export const CreateIssuePage: React.FC = () => {
         {/* STEP 4: REVIEW & SUBMIT */}
         {step === 4 && (
           <div className="space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Step 4: Final Review & Submission</h3>
+            <div className="border-b border-slate-100 pb-2">
+              <h3 className="text-sm font-bold text-slate-900">Step 4: Final Review & Confirmation</h3>
+              <p className="text-xs text-slate-500">Verify all technical details before creating the operational issue</p>
+            </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4 text-xs">
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Issue Summary</span>
+                <p className="text-sm font-bold text-slate-900">{formValues.title || 'Untitled Issue'}</p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-slate-200/80">
                 <div>
-                  <span className="text-slate-500 block">Title:</span>
-                  <span className="font-bold text-slate-900">{formValues.title}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Priority</span>
+                  <span className="font-mono font-bold text-slate-900 inline-block mt-0.5">{formValues.priority}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Priority / Severity:</span>
-                  <span className="font-mono font-bold text-slate-900">{formValues.priority} / {formValues.severity}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Severity</span>
+                  <span className="font-mono font-bold text-slate-900 inline-block mt-0.5">{formValues.severity}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Component</span>
+                  <span className="font-mono text-slate-800 inline-block mt-0.5">{formValues.moduleComponent || 'General'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Environment</span>
+                  <span className="font-mono text-slate-800 inline-block mt-0.5">{formValues.environment || 'Production'}</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <span className="text-slate-500 block">Module / Component:</span>
-                  <span className="font-mono text-slate-900">{formValues.moduleComponent || 'N/A'}</span>
+              {formValues.description && (
+                <div className="pt-3 border-t border-slate-200/80">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Description Preview</span>
+                  <p className="text-slate-700 whitespace-pre-line bg-white p-3 rounded border border-slate-200 font-mono text-[11px] max-h-32 overflow-y-auto">
+                    {formValues.description}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-slate-500 block">Environment:</span>
-                  <span className="font-mono text-slate-900">{formValues.environment || 'N/A'}</span>
-                </div>
-              </div>
+              )}
 
               {triageAnalysis && (
-                <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-slate-700">
-                  <span>Evaluated Quality Score:</span>
-                  <span className="font-mono font-extrabold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded">
-                    {triageAnalysis.qualityScore.score} / 100
+                <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between bg-emerald-50/50 p-3 rounded border border-emerald-200">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <span className="font-bold text-emerald-900 block text-xs">AI Quality Evaluated</span>
+                      <span className="text-[11px] text-emerald-700">Triage analysis completed with {triageAnalysis.duplicateCandidates?.length || 0} potential duplicates detected.</span>
+                    </div>
+                  </div>
+                  <span className="font-mono font-extrabold bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded text-xs border border-emerald-300">
+                    Quality: {triageAnalysis.qualityScore.score} / 100
                   </span>
                 </div>
               )}
@@ -425,7 +462,7 @@ export const CreateIssuePage: React.FC = () => {
 
             <div className="flex justify-between pt-4 border-t border-slate-100">
               <Button type="button" variant="outline" onClick={() => setStep(3)} leftIcon={<ArrowLeft className="w-4 h-4" />}>
-                Back
+                Back: AI Triage
               </Button>
               <Button
                 type="submit"
@@ -433,7 +470,7 @@ export const CreateIssuePage: React.FC = () => {
                 isLoading={isSubmitting}
                 leftIcon={<Save className="w-4 h-4" />}
               >
-                Create Issue
+                Create Issue Record
               </Button>
             </div>
           </div>

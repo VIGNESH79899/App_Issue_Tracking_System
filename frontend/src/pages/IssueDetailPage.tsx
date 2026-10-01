@@ -9,6 +9,8 @@ import { intelligenceApi } from '../services/intelligenceApi';
 import {
   IssueDTO,
   IssueStatus,
+  IssuePriority,
+  IssueSeverity,
   CommentDTO,
   AttachmentDTO,
   IssueHistoryDTO,
@@ -268,8 +270,76 @@ export const IssueDetailPage: React.FC = () => {
           <h1 className="text-xl font-bold text-slate-900 leading-tight">{issue.title}</h1>
         </div>
 
-        {canDeleteIssue && (
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
+          <PriorityBadge priority={issue.priority} size="md" />
+          <SeverityBadge severity={issue.severity} size="md" />
+          <StatusBadge status={issue.status} size="md" />
+        </div>
+      </div>
+
+      {/* Flagship Issue Action Bar */}
+      <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-subtle flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {canAssign && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAssigneeModalOpen(true)}
+              leftIcon={<UserPlus className="w-3.5 h-3.5 text-brand-600" />}
+            >
+              {issue.assignee ? 'Reassign Developer' : 'Assign Developer'}
+            </Button>
+          )}
+
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs">
+            <span className="text-[11px] text-slate-500 font-medium">Priority:</span>
+            <select
+              value={issue.priority}
+              onChange={(e) => handleAcceptPriority(e.target.value)}
+              className="bg-transparent font-semibold text-slate-800 outline-none cursor-pointer text-xs"
+              aria-label="Change issue priority"
+            >
+              {Object.values(IssuePriority).map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs">
+            <span className="text-[11px] text-slate-500 font-medium">Severity:</span>
+            <select
+              value={issue.severity}
+              onChange={(e) => handleAcceptSeverity(e.target.value)}
+              className="bg-transparent font-semibold text-slate-800 outline-none cursor-pointer text-xs"
+              aria-label="Change issue severity"
+            >
+              {Object.values(IssueSeverity).map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveTab('comments')}
+            leftIcon={<MessageSquare className="w-3.5 h-3.5 text-slate-500" />}
+          >
+            Comment ({comments.length})
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveTab('attachments')}
+            leftIcon={<Paperclip className="w-3.5 h-3.5 text-slate-500" />}
+          >
+            Attach ({attachments.length})
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {canDeleteIssue && (
             <Button
               variant="outline"
               size="sm"
@@ -286,11 +356,14 @@ export const IssueDetailPage: React.FC = () => {
             >
               Escalate to Incident
             </Button>
+          )}
+
+          {canDeleteIssue && (
             <Button variant="danger" size="sm" onClick={() => setDeleteConfirmOpen(true)} leftIcon={<Trash2 className="w-3.5 h-3.5" />}>
-              Delete Issue
+              Delete
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Main Grid Layout */}

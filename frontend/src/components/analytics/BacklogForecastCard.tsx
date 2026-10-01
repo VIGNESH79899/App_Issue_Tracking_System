@@ -10,6 +10,8 @@ interface BacklogForecastCardProps {
 export const BacklogForecastCard: React.FC<BacklogForecastCardProps> = ({ forecast }) => {
   const { currentBacklog, forecast7Days, forecast14Days, forecast30Days, direction, confidence, explanation } = forecast;
 
+  const isInsufficient = confidence === 'INSUFFICIENT_DATA';
+
   let TrendIcon = Minus;
   let trendColor = 'text-slate-600';
 
@@ -19,6 +21,30 @@ export const BacklogForecastCard: React.FC<BacklogForecastCardProps> = ({ foreca
   } else if (direction === 'IMPROVING') {
     TrendIcon = TrendingDown;
     trendColor = 'text-emerald-600';
+  }
+
+  if (isInsufficient) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-subtle">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div className="flex items-center space-x-2">
+            <Minus className="w-4 h-4 text-slate-400" />
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Backlog Growth Forecast</h3>
+          </div>
+          <ForecastConfidenceBadge confidence={confidence} />
+        </div>
+        <div className="bg-amber-50/70 border border-amber-200 rounded-lg p-3 text-xs space-y-1.5">
+          <span className="font-bold text-amber-900 block">Insufficient Historical Sample Size</span>
+          <p className="text-amber-800 text-[11px] leading-relaxed">
+            Predictive modeling requires at least 14 days of active issue transitions. Current active backlog is{' '}
+            <strong className="font-mono text-slate-900">{currentBacklog} issues</strong>.
+          </p>
+        </div>
+        <div className="text-[11px] text-slate-500 font-mono">
+          Known facts: Current Backlog = {currentBacklog} | History window &lt; 14 days
+        </div>
+      </div>
+    );
   }
 
   return (

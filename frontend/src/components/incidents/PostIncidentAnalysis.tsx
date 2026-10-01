@@ -27,16 +27,21 @@ export const PostIncidentAnalysis: React.FC<PostIncidentAnalysisProps> = ({ anal
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6 shadow-subtle">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
         <div className="flex items-center space-x-2">
           <Sparkles className="w-5 h-5 text-brand-600" />
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
             AI-Assisted Post-Incident Analysis (Post-Mortem)
           </h3>
         </div>
-        <span className="text-[10px] font-mono font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded border border-slate-200">
-          Generated from timeline facts. AI recommendations are advisory and require engineering validation.
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-300">
+            AI SUGGESTION · ADVISORY
+          </span>
+          <span className="text-[10px] text-slate-500 font-mono">
+            Ground truth: timeline facts only
+          </span>
+        </div>
       </div>
 
       {/* Executive Summary & Root Cause */}
