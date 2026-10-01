@@ -6,6 +6,14 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting comprehensive enterprise database seed...');
 
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: 'admin@system.local' },
+  });
+  if (existingAdmin) {
+    console.log('⚡ Database already seeded with admin user. Skipping seed.');
+    return;
+  }
+
   // Hash secure default passwords
   const passwordHash = await bcrypt.hash('Password123!', 10);
 

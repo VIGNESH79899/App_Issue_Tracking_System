@@ -80,9 +80,16 @@ export const errorHandler = (
   const timestamp = new Date().toISOString();
   const requestId = req.requestId;
 
-  if (err instanceof ApiError) {
+  const isApiError =
+    err instanceof ApiError ||
+    (typeof (err as any).statusCode === 'number' && typeof (err as any).code === 'string');
+
+  if (isApiError) {
+    const statusCode = (err as any).statusCode;
+    const code = (err as any).code;
+
     // Log security events for auth/forbidden failures
-    if (err.statusCode === 401) {
+    if (statusCode === 401) {
       recordSecurityEvent({
         type: 'AUTH_FAILURE',
         requestId,
@@ -91,7 +98,7 @@ export const errorHandler = (
         method: req.method,
         message: err.message,
       });
-    } else if (err.statusCode === 403) {
+    } else if (statusCode === 403) {
       recordSecurityEvent({
         type: 'FORBIDDEN_ACCESS',
         requestId,
@@ -100,7 +107,7 @@ export const errorHandler = (
         method: req.method,
         message: err.message,
       });
-    } else if (err.statusCode === 429) {
+    } else if (statusCode === 429) {
       recordSecurityEvent({
         type: 'RATE_LIMIT',
         requestId,
@@ -114,14 +121,14 @@ export const errorHandler = (
     const response: ApiResponse = {
       success: false,
       error: {
-        code: err.code,
+        code,
         message: err.message,
         requestId,
-        details: err.details as any[] | undefined,
+        details: (err as any).details as any[] | undefined,
       },
       timestamp,
     };
-    res.status(err.statusCode).json(response);
+    res.status(statusCode).json(response);
     return;
   }
 
@@ -166,6 +173,8 @@ export const errorHandler = (
     route: req.originalUrl,
     method: req.method,
     userId: req.user?.userId,
+    errorMessage: err.message,
+    stack: err.stack,
   });
 
   // Detect Prisma errors without leaking internals
