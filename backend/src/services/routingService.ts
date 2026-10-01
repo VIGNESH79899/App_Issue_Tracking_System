@@ -82,19 +82,19 @@ export class RoutingService {
       });
 
       const activeIssues = assignedIssues.filter(
-        (i) => i.status !== IssueStatus.CLOSED && i.status !== IssueStatus.RESOLVED
+        (i: any) => i.status !== IssueStatus.CLOSED && i.status !== IssueStatus.RESOLVED
       );
       const activeIssueCount = activeIssues.length;
       const criticalHighIssueCount = activeIssues.filter(
-        (i) => i.priority === IssuePriority.CRITICAL || i.priority === IssuePriority.HIGH
+        (i: any) => i.priority === IssuePriority.CRITICAL || i.priority === IssuePriority.HIGH
       ).length;
 
-      const resolvedIssues = assignedIssues.filter((i) => i.resolvedAt !== null);
+      const resolvedIssues = assignedIssues.filter((i: any) => i.resolvedAt !== null);
 
       // Factor 1: Component / Module Match (35%)
       if (issue.moduleComponent) {
         const matchingCompCount = assignedIssues.filter(
-          (i) => i.moduleComponent && i.moduleComponent.toLowerCase() === issue.moduleComponent!.toLowerCase()
+          (i: any) => i.moduleComponent && i.moduleComponent.toLowerCase() === issue.moduleComponent!.toLowerCase()
         ).length;
         if (matchingCompCount > 0) {
           score += 35;
@@ -132,7 +132,7 @@ export class RoutingService {
       }
 
       // Factor 4: Similar Issue Experience (10%)
-      const similarPriorityCount = resolvedIssues.filter((i) => i.priority === issue.priority).length;
+      const similarPriorityCount = resolvedIssues.filter((i: any) => i.priority === issue.priority).length;
       if (similarPriorityCount > 0) {
         score += 10;
         reasons.push(`Has successfully resolved ${similarPriorityCount} ${issue.priority} priority issue(s)`);
@@ -151,7 +151,7 @@ export class RoutingService {
       // Calculate average resolution time
       let averageResolutionHours: number | null = null;
       if (resolvedIssues.length > 0) {
-        const totalHours = resolvedIssues.reduce((acc, i) => {
+        const totalHours = resolvedIssues.reduce((acc: number, i: any) => {
           const hrs = (new Date(i.resolvedAt!).getTime() - new Date(i.createdAt).getTime()) / (1000 * 60 * 60);
           return acc + Math.max(0, hrs);
         }, 0);

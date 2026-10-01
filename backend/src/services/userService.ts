@@ -20,7 +20,7 @@ export class UserService {
     const users = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
     });
-    return users.map((u) => this.formatUser(u));
+    return users.map((u: any) => this.formatUser(u));
   }
 
   async getUserById(id: string) {

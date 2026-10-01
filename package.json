@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
-    "build": "npm run build --workspace=shared && npm run build --workspace=backend && npm run build --workspace=frontend",
+    "build": "npm run build --workspace=shared && npm run db:generate --workspace=database && npm run build --workspace=backend && npm run build --workspace=frontend",
     "build:backend": "npm run build --workspace=shared && npm run db:generate --workspace=database && npm run build --workspace=backend",
     "build:frontend": "npm run build --workspace=shared && npm run build --workspace=frontend",
     "start": "node backend/dist/server.js",

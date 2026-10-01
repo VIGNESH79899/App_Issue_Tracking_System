@@ -241,7 +241,7 @@ export class SlaService {
       health = ProjectHealth.AT_RISK;
     }
 
-    const activeIssues = issues.filter((i) => i.status !== 'CLOSED' && i.status !== 'RESOLVED');
+    const activeIssues = issues.filter((i: any) => i.status !== 'CLOSED' && i.status !== 'RESOLVED');
 
     return {
       totalActiveIssues: activeIssues.length,
