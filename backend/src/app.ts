@@ -36,14 +36,20 @@ app.use('/api', (_req: Request, res: Response, next: NextFunction) => {
 // ── CORS ─────────────────────────────────────────────────────
 // Development: allow configured localhost origin.
 // Production: allow configured CORS_ORIGIN (normalizes trailing slashes, supports wildcard).
-app.use(
-  '/api',
+app.use('/api', (req: Request, res: Response, next: NextFunction) =>
   cors({
     origin: (origin, callback) => {
       const allowed = env.CORS_ORIGIN.split(',').map((o) => o.trim().replace(/\/+$/, ''));
       // Allow same-origin / server-to-server (no origin header)
       if (!origin) return callback(null, true);
       const normalizedOrigin = origin.replace(/\/+$/, '');
+      const host = req.get('x-forwarded-host') || req.get('host');
+      const protocol = (req.get('x-forwarded-proto') || req.protocol).split(',')[0].trim();
+      const sameOrigin = host ? `${protocol}://${host}` : undefined;
+      // The bundled SPA is served by this service. Its browser requests carry
+      // an Origin header, even though they are same-origin, so allow it
+      // independently of any optional external-client CORS allowlist.
+      if (normalizedOrigin === sameOrigin) return callback(null, true);
       if (allowed.includes('*') || allowed.includes(normalizedOrigin)) return callback(null, true);
       return callback(new Error(`CORS: Origin '${origin}' is not allowed`));
     },
@@ -51,7 +57,7 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
     exposedHeaders: ['X-Request-ID'],
-  })
+  })(req, res, next)
 );
 
 // ── Body Parsers ─────────────────────────────────────────────
