@@ -24,9 +24,11 @@
     "db:seed": "npm run db:seed --workspace=database",
     "test": "npm run test --workspaces --if-present"
   },
-  "devDependencies": {
+  "dependencies": {
     "concurrently": "^9.1.2",
-    "prettier": "^3.5.2",
     "typescript": "^5.7.3"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.2"
   }
 }
