@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiResponse } from '@app-issue-track/shared';
 import { checkDatabaseHealth } from '../observability/databaseHealth.js';
+import { prisma } from '../config/database.js';
 import { env } from '../config/env.js';
 
 // GET /api/v1/health — existing general health check (backward-compatible)
@@ -73,5 +74,74 @@ export const checkReady = async (
     });
   } catch (error) {
     next(error);
+  }
+};
+
+// GET /api/v1/health/debug — Diagnostic endpoint to inspect database schema & runtime environment
+export const checkDebug = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const rawTables: any = await prisma.$queryRaw`
+      SELECT table_name FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+    `;
+    const tables = Array.isArray(rawTables) ? rawTables.map((t: any) => t.table_name) : [];
+    let userCount = -1;
+    let userQueryError = null;
+    try {
+      userCount = await prisma.user.count();
+    } catch (e: any) {
+      userQueryError = e.message;
+    }
+
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      tables,
+      userCount,
+      userQueryError,
+      envInfo: {
+        nodeEnv: env.NODE_ENV,
+        hasJwtSecret: Boolean(env.JWT_SECRET),
+        jwtSecretLength: env.JWT_SECRET?.length || 0,
+        hasDbUrl: Boolean(env.DATABASE_URL),
+        dbHost: env.DATABASE_URL.includes('@') ? env.DATABASE_URL.split('@')[1]?.split('/')[0] : 'local',
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      stack: err.stack,
+    });
+  }
+};
+
+// POST /api/v1/health/init-db — Initialize database schema & seeds on demand
+export const initDatabase = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const { execSync } = await import('child_process');
+    console.log('🔄 Initializing database schema via db push...');
+    const pushOutput = execSync(
+      'npx --yes prisma db push --schema=database/prisma/schema.prisma --accept-data-loss',
+      { encoding: 'utf-8' }
+    );
+    console.log('🌱 Seeding database...');
+    const seedOutput = execSync(
+      'npx --yes tsx database/prisma/seed.ts',
+      { encoding: 'utf-8' }
+    );
+    res.json({
+      success: true,
+      message: 'Database schema pushed and seeded successfully!',
+      pushOutput,
+      seedOutput,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      stdout: err.stdout?.toString(),
+      stderr: err.stderr?.toString(),
+    });
   }
 };
