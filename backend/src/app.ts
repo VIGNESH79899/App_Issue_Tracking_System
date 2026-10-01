@@ -37,6 +37,7 @@ app.use('/api', (_req: Request, res: Response, next: NextFunction) => {
 // Development: allow configured localhost origin.
 // Production: allow configured CORS_ORIGIN (normalizes trailing slashes, supports wildcard).
 app.use(
+  '/api',
   cors({
     origin: (origin, callback) => {
       const allowed = env.CORS_ORIGIN.split(',').map((o) => o.trim().replace(/\/+$/, ''));
