@@ -5,7 +5,9 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci && npm run build:backend
+    # The Node server serves frontend/dist in production. Build the complete
+    # monorepo so the SPA assets are present in the runtime image as well.
+    buildCommand: npm ci && npm run build
     startCommand: npm run db:deploy && npm start
     healthCheckPath: /api/v1/health/live
     envVars:
