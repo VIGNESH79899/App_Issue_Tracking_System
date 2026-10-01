@@ -6,8 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Applications Issue Tracking System</title>
   </head>
-  <body class="bg-gray-50 text-gray-900 antialiased min-h-screen">
+  <body class="bg-gray-50 text-slate-900 antialiased min-h-screen">
     <div id="root"></div>
+    <script>
+      window.addEventListener('error', function(e) {
+        var el = document.getElementById('root');
+        if (el && el.innerHTML.trim() === '') {
+          var box = document.createElement('div');
+          box.style.cssText = 'position:fixed;top:20px;left:20px;right:20px;background:#fee2e2;border:2px solid #ef4444;color:#991b1b;padding:24px;border-radius:8px;font-family:sans-serif;z-index:999999;';
+          box.innerHTML = '<h3 style="margin:0 0 8px;font-size:18px;">Application Error</h3><p style="margin:0;font-family:monospace;white-space:pre-wrap;">' + (e.message || (e.error && e.error.stack) || e.error) + '</p>';
+          document.body.appendChild(box);
+        }
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var el = document.getElementById('root');
+        if (el && el.innerHTML.trim() === '') {
+          var box = document.createElement('div');
+          box.style.cssText = 'position:fixed;top:20px;left:20px;right:20px;background:#fee2e2;border:2px solid #ef4444;color:#991b1b;padding:24px;border-radius:8px;font-family:sans-serif;z-index:999999;';
+          var details = (e.reason && (e.reason.stack || e.reason.message)) || e.reason || 'Unhandled Promise Rejection';
+          box.innerHTML = '<h3 style="margin:0 0 8px;font-size:18px;">Unhandled Promise Rejection</h3><p style="margin:0;font-family:monospace;white-space:pre-wrap;">' + details + '</p>';
+          document.body.appendChild(box);
+        }
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
