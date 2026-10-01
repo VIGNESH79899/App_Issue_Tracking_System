@@ -93,27 +93,12 @@ export const checkDebug = async (_req: Request, res: Response): Promise<void> =>
       userQueryError = e.message;
     }
 
-    let authTest: any = null;
-    try {
-      const { authService } = await import('../services/authService.js');
-      const authRes = await authService.login({ email: 'admin@system.local', password: 'Password123!' });
-      authTest = { success: true, email: authRes.user.email, role: authRes.user.role, hasToken: Boolean(authRes.accessToken) };
-    } catch (e: any) {
-      authTest = {
-        error: e.message,
-        code: e.code,
-        statusCode: e.statusCode,
-        stack: e.stack,
-      };
-    }
-
     res.json({
       success: true,
       timestamp: new Date().toISOString(),
       tables,
       userCount,
       userQueryError,
-      authTest,
       envInfo: {
         nodeEnv: env.NODE_ENV,
         hasJwtSecret: Boolean(env.JWT_SECRET),

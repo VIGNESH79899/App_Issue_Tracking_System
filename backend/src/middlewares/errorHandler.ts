@@ -191,7 +191,7 @@ export const errorHandler = (
       code,
       message: safeMessage,
       requestId,
-      details: [err.message, err.stack] as any,
+      ...(env.NODE_ENV === 'development' ? { details: [err.message, err.stack] as any } : {}),
     },
     timestamp,
   };
