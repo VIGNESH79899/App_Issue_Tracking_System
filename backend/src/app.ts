@@ -25,6 +25,7 @@ app.use(
       ? undefined // Use helmet's strict defaults in production
       : false,    // Disable CSP in development to not break Vite HMR
     crossOriginEmbedderPolicy: false, // Allows Recharts SVGs to load
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows uploaded attachments/images to load on cross-origin frontends
   })
 );
 
@@ -36,14 +37,15 @@ app.use('/api', (_req: Request, res: Response, next: NextFunction) => {
 
 // ── CORS ─────────────────────────────────────────────────────
 // Development: allow configured localhost origin.
-// Production: only explicitly configured CORS_ORIGIN. Never wildcard with credentials.
+// Production: allow configured CORS_ORIGIN (normalizes trailing slashes, supports wildcard).
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowed = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+      const allowed = env.CORS_ORIGIN.split(',').map((o) => o.trim().replace(/\/+$/, ''));
       // Allow same-origin / server-to-server (no origin header)
       if (!origin) return callback(null, true);
-      if (allowed.includes(origin)) return callback(null, true);
+      const normalizedOrigin = origin.replace(/\/+$/, '');
+      if (allowed.includes('*') || allowed.includes(normalizedOrigin)) return callback(null, true);
       return callback(new Error(`CORS: Origin '${origin}' is not allowed`));
     },
     credentials: true,

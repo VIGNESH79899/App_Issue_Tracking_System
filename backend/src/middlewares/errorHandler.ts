@@ -143,6 +143,22 @@ export const errorHandler = (
     return;
   }
 
+  // Detect CORS rejection
+  const errMsg = err.message || '';
+  if (errMsg.startsWith('CORS:')) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: 'FORBIDDEN',
+        message: errMsg,
+        requestId,
+      },
+      timestamp,
+    };
+    res.status(403).json(response);
+    return;
+  }
+
   // Unexpected error — sanitize before sending
   logger.error('Unhandled exception', {
     requestId,
@@ -153,7 +169,6 @@ export const errorHandler = (
   });
 
   // Detect Prisma errors without leaking internals
-  const errMsg = err.message || '';
   const isPrismaError = errMsg.includes('Prisma') || errMsg.includes('PrismaClient');
   const statusCode = isPrismaError ? 503 : 500;
   const code = isPrismaError ? 'DATABASE_UNAVAILABLE' : 'INTERNAL_ERROR';

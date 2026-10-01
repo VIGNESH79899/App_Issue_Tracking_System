@@ -2,157 +2,141 @@
 
 This document provides end-to-end guidance for deploying, maintaining, and scaling the **Applications Issue Tracking System (AITS)** in production environments.
 
----
-
-## 1. Quick Start: Single-Host Production via Docker Compose
-
-The fastest and most resilient way to run AITS in production is using Docker Compose. It provisions an isolated network containing:
-- **PostgreSQL 16** with automated health checks & persistent data volumes.
-- **AITS Backend API** with multi-stage build, non-root execution (`USER node`), signal forwarding (`dumb-init`), and automatic database health probes.
-- **AITS Frontend (Nginx)** with SPA client-side routing fallback, Gzip compression, immutable asset caching, security headers, and built-in reverse proxy for `/api/` and `/uploads/`.
-
-### Deployment Steps
-
-1. **Clone the repository on your production server:**
-   ```bash
-   git clone <repo-url> /opt/aits
-   cd /opt/aits
-   ```
-
-2. **Configure your production environment file:**
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` and set:
-   - `JWT_SECRET`: A secure 32+ character random string (`openssl rand -base64 32`)
-   - `POSTGRES_PASSWORD`: A strong PostgreSQL database password
-   - `CORS_ORIGIN`: Your production domains (e.g., `https://aits.yourcompany.com`)
-   - `GEMINI_API_KEY`: (Optional) Your Google AI key if enabling AI Triage and Analysis
-
-3. **Deploy the stack:**
-   ```bash
-   docker compose up -d --build
-   ```
-
-4. **Run database migrations and initial seed (first-time deployment only):**
-   ```bash
-   # Run Prisma migrations non-interactively
-   docker compose exec backend npx prisma migrate deploy --schema=database/prisma/schema.prisma
-
-   # Seed default administrative and operational roles (idempotent)
-   docker compose exec backend npx prisma db seed
-   ```
-
-5. **Verify Stack Health:**
-   ```bash
-   docker compose ps
-   curl http://localhost:5000/api/v1/health
-   curl http://localhost:5000/api/v1/health/live
-   curl http://localhost:5000/api/v1/health/ready
-   curl http://localhost:5173/healthz
-   ```
+- **GitHub Repository**: [https://github.com/VIGNESH79899/App_Issue_Tracking_System.git](https://github.com/VIGNESH79899/App_Issue_Tracking_System.git)
 
 ---
 
-## 2. Default Administrative Access
+## Deployment Options at a Glance
 
-When the database seed is executed, the following baseline accounts are provisioned:
+| Deployment Path | Best For | Complexity | Cost |
+| :--- | :--- | :--- | :--- |
+| **Option A: Render Blueprint** | 1-Click Cloud Deployment (Backend + Frontend + Managed Postgres) | Easiest | Free tier available |
+| **Option B: Vercel + Render / Supabase** | High-performance CDN for Frontend + Cloud Backend & DB | Easy | Free tier available |
+| **Option C: Docker Compose on VPS** | Dedicated Ubuntu Server (AWS, DigitalOcean, Hetzner, Linode) | Intermediate | $5-$10/mo VPS |
 
-| Role | Email | Default Password |
+---
+
+## Option A: 1-Click Cloud Deployment via Render Blueprint
+
+This repository includes a pre-configured `render.yaml` specification that provisions:
+1. **Managed PostgreSQL Database**
+2. **Node.js Web Service** (`aits-backend`) with automatic Prisma migrations on deploy
+3. **Static Web Site** (`aits-frontend`) with SPA rewrites
+
+### Steps:
+1. Log in to [Render.com](https://render.com).
+2. Click **New +** and select **Blueprint**.
+3. Connect your GitHub repository: `VIGNESH79899/App_Issue_Tracking_System`.
+4. Render will parse `render.yaml` and display the 3 services (`aits-postgres`, `aits-backend`, `aits-frontend`).
+5. Click **Apply**.
+6. Once deployed:
+   - Copy the URL of your backend (e.g., `https://aits-backend.onrender.com`).
+   - Go to your `aits-frontend` settings -> Environment Variables.
+   - Set `VITE_API_BASE_URL` to `https://aits-backend.onrender.com/api/v1` and trigger a manual redeploy.
+7. Open the frontend URL in your browser!
+
+---
+
+## Option B: Vercel (Frontend) + Render / Neon (Backend & Database)
+
+### 1. Database (Neon or Supabase)
+1. Create a free PostgreSQL database on [Neon.tech](https://neon.tech) or [Supabase.com](https://supabase.com).
+2. Copy the pooled connection string (`DATABASE_URL`).
+
+### 2. Backend (Render Web Service)
+1. On [Render](https://render.com), click **New +** -> **Web Service**.
+2. Connect `VIGNESH79899/App_Issue_Tracking_System`.
+3. Set the following build and run settings:
+   - **Root Directory**: leave empty
+   - **Build Command**: `npm ci && npm run build:backend`
+   - **Start Command**: `npm run db:deploy && npm start`
+4. Set Environment Variables:
+   - `NODE_ENV`: `production`
+   - `PORT`: `5000`
+   - `HOST`: `0.0.0.0`
+   - `DATABASE_URL`: *(your Neon/Supabase connection string with `?sslmode=require`)*
+   - `JWT_SECRET`: *(32+ character random string)*
+   - `CORS_ORIGIN`: `*` *(or your Vercel frontend URL once deployed)*
+5. Click **Deploy Web Service**.
+
+### 3. Frontend (Vercel)
+1. On [Vercel](https://vercel.com), click **Add New...** -> **Project**.
+2. Import `VIGNESH79899/App_Issue_Tracking_System`.
+3. Vercel automatically detects the included `vercel.json`:
+   - **Build Command**: `npm run build:frontend`
+   - **Output Directory**: `frontend/dist`
+4. Add Environment Variable:
+   - `VITE_API_BASE_URL`: `https://<your-render-backend-name>.onrender.com/api/v1`
+5. Click **Deploy**.
+
+---
+
+## Option C: Self-Hosted Production via Docker Compose (VPS / Server)
+
+### 1. Clone & Setup
+```bash
+git clone https://github.com/VIGNESH79899/App_Issue_Tracking_System.git /opt/aits
+cd /opt/aits
+cp .env.example .env
+```
+
+### 2. Configure `.env`
+Edit `/opt/aits/.env`:
+- `JWT_SECRET`: Generate with `openssl rand -base64 32`
+- `POSTGRES_PASSWORD`: Choose a strong password
+- `CORS_ORIGIN`: Your domain (e.g., `https://aits.yourdomain.com`)
+
+### 3. Launch Containers
+```bash
+docker compose up -d --build
+```
+
+### 4. Run Migrations & Initial Seed
+```bash
+# Run Prisma migrations
+docker compose exec backend npx prisma migrate deploy --schema=database/prisma/schema.prisma
+
+# Seed default initial users and sample data
+docker compose exec backend npx prisma db seed
+```
+
+### 5. Verify Health
+```bash
+docker compose ps
+curl http://localhost:5000/api/v1/health/live
+curl http://localhost:5173/healthz
+```
+
+---
+
+## Default Administrative Credentials
+
+Upon database seed, the following baseline user accounts are provisioned:
+
+| Role | Email | Password |
 | :--- | :--- | :--- |
 | **System Administrator** | `admin@system.local` | `Password123!` |
 | **Project Manager** | `pm@system.local` | `Password123!` |
 | **Lead Developer** | `dev@system.local` | `Password123!` |
 | **QA / Reporter** | `reporter@system.local` | `Password123!` |
 
-> **Production Security Note**: Immediately log in as `admin@system.local`, change passwords, or create new administrator credentials and deactivate default test accounts.
+> 🔒 **Security Note**: Log in immediately as `admin@system.local`, navigate to **Users** or **Profile**, and update default passwords.
 
 ---
 
-## 3. Cloud Split Deployment (Vercel + Render / Railway + Managed Postgres)
+## Environment Variables Reference
 
-For scalable, serverless, or microservice deployments:
-
-### Backend (Render / Railway / AWS ECS / Fly.io)
-- **Root Directory**: `backend` (or monorepo root)
-- **Build Command**: `npm ci && npm run build --workspace=shared && npm run db:generate --workspace=database && npm run build --workspace=backend`
-- **Start Command**: `npm run start --workspace=backend`
-- **Required Environment Variables**:
-  - `NODE_ENV=production`
-  - `PORT=5000` (or assigned by platform)
-  - `HOST=0.0.0.0`
-  - `DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname>?sslmode=require`
-  - `JWT_SECRET=<32+ char secret>`
-  - `CORS_ORIGIN=https://your-frontend.vercel.app`
-
-### Frontend (Vercel / Netlify / Cloudflare Pages)
-- **Framework Preset**: Vite
-- **Root Directory**: `frontend`
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Environment Variables**:
-  - `VITE_API_BASE_URL=https://your-backend-api.onrender.com/api/v1`
-
----
-
-## 4. Reverse Proxy & SSL/TLS Configuration (Host Nginx + Certbot)
-
-When hosting behind an external domain name with HTTPS:
-
-```nginx
-# /etc/nginx/sites-available/aits.yourdomain.com
-server {
-    server_name aits.yourdomain.com;
-
-    client_max_body_size 25M;
-
-    location / {
-        proxy_pass http://127.0.0.1:5173; # Frontend container
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-Issue SSL with Let's Encrypt:
-```bash
-sudo certbot --nginx -d aits.yourdomain.com
-```
-
----
-
-## 5. Health Checks & Observability Endpoints
-
-| Endpoint | Method | Purpose | Normal Response |
+| Variable | Required | Default | Purpose |
 | :--- | :--- | :--- | :--- |
-| `/api/v1/health` | `GET` | Overall System & DB Connectivity | `{"success":true,"data":{"status":"UP"}}` |
-| `/api/v1/health/live` | `GET` | Process Liveness (Kubernetes probe) | `{"success":true,"data":{"status":"ALIVE"}}` |
-| `/api/v1/health/ready` | `GET` | Dependency Readiness probe | `{"success":true,"data":{"status":"READY"}}` |
-| `/api/v1/operations/metrics` | `GET` | Observability & Latency Metrics | Detailed operational metrics |
-| `/healthz` | `GET` | Frontend Nginx Liveness | `200 OK` |
-
----
-
-## 6. Backup & Restore Procedures
-
-### Database Backup
-```bash
-docker compose exec postgres pg_dump -U postgres -d app_issue_track -F c -b -v -f /tmp/backup.dump
-docker cp app_issue_track_postgres:/tmp/backup.dump ./backups/
-```
-
-### Database Restore
-```bash
-docker cp ./backups/backup.dump app_issue_track_postgres:/tmp/restore.dump
-docker compose exec postgres pg_restore -U postgres -d app_issue_track -c -v /tmp/restore.dump
-```
-
-### Uploads Backup
-```bash
-tar -czvf uploads_backup.tar.gz ./uploads/
-```
+| `NODE_ENV` | Yes | `production` | Runtime mode |
+| `PORT` | No | `5000` | HTTP port for backend |
+| `HOST` | No | `0.0.0.0` | Bind host address |
+| `DATABASE_URL` | Yes | - | PostgreSQL connection URL |
+| `JWT_SECRET` | Yes | - | Secret for signing JWTs (min 16 chars) |
+| `JWT_EXPIRES_IN` | No | `1d` | Auth token expiry duration |
+| `CORS_ORIGIN` | Yes | `*` | Allowed client origins (comma-separated) |
+| `UPLOAD_DIR` | No | `uploads` | Local upload directory |
+| `MAX_FILE_SIZE_MB` | No | `10` | Max file upload size in MB |
+| `AI_ENABLED` | No | `false` | Enable/disable Google Gemini AI Triage |
+| `GEMINI_API_KEY` | If AI enabled | - | Google Gemini AI API key |
+| `VITE_API_BASE_URL` | Frontend | `/api/v1` | URL of the backend API |
