@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
+import fs from 'fs';
 import { env } from './config/env.js';
 import apiRouter from './routes/index.js';
 import { errorHandler, ApiError } from './middlewares/errorHandler.js';
@@ -73,10 +74,22 @@ app.use('/uploads', express.static(path.join(process.cwd(), env.UPLOAD_DIR)));
 // ── API Routes ────────────────────────────────────────────────
 app.use('/api/v1', apiRouter);
 
-// ── 404 Handler ───────────────────────────────────────────────
-app.use('*', (_req: Request, _res: Response, next: NextFunction) => {
-  next(ApiError.notFound('Requested API route does not exist'));
-});
+// ── Serve Frontend SPA in Single-Service Mode ─────────────────
+const frontendDist = path.join(process.cwd(), 'frontend/dist');
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get('*', (req: Request, res: Response, next: NextFunction) => {
+    if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/uploads')) {
+      return next(ApiError.notFound('Requested API route does not exist'));
+    }
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+} else {
+  // ── 404 Handler for pure API mode ───────────────────────────
+  app.use('*', (_req: Request, _res: Response, next: NextFunction) => {
+    next(ApiError.notFound('Requested API route does not exist'));
+  });
+}
 
 // ── Centralized Error Handler ─────────────────────────────────
 app.use(errorHandler);
