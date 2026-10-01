@@ -4,25 +4,29 @@ import { LoginInput, RegisterInput, ApiResponse, AuthResponseData, UserDTO } fro
 export const authApi = {
   login: async (input: LoginInput): Promise<AuthResponseData> => {
     const response = await apiClient.post<never, ApiResponse<{ user: UserDTO; accessToken: string; refreshToken: string }>>('/auth/login', input);
-    if (response.data?.accessToken) {
-      localStorage.setItem('token', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
+    const data = response.data;
+    if (!data) throw new Error('The server returned an invalid authentication response.');
+    if (data.accessToken) {
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
     }
     return {
-      user: response.data!.user,
-      token: response.data!.accessToken,
+      user: data.user,
+      token: data.accessToken,
     };
   },
 
   register: async (input: RegisterInput): Promise<AuthResponseData> => {
     const response = await apiClient.post<never, ApiResponse<{ user: UserDTO; accessToken: string; refreshToken: string }>>('/auth/register', input);
-    if (response.data?.accessToken) {
-      localStorage.setItem('token', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
+    const data = response.data;
+    if (!data) throw new Error('The server returned an invalid registration response.');
+    if (data.accessToken) {
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
     }
     return {
-      user: response.data!.user,
-      token: response.data!.accessToken,
+      user: data.user,
+      token: data.accessToken,
     };
   },
 
