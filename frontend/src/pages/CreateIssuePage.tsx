@@ -133,7 +133,7 @@ export const CreateIssuePage: React.FC = () => {
       toast.success('Issue Reported', `Created issue [${created.issueKey}] successfully.`);
       navigate(`/issues/${created.id}`);
     } catch (err: any) {
-      const msg = err.response?.data?.error?.message || 'Failed to report issue.';
+      const msg = err?.message || err?.response?.data?.error?.message || 'Failed to report issue.';
       toast.error('Submission Failed', msg);
     } finally {
       setIsSubmitting(false);

@@ -229,11 +229,19 @@ export class IssueService {
       throw ApiError.badRequest('The selected project does not belong to the specified application');
     }
 
-    // Auto-generate Issue Key based on Project Key (e.g. PAY-104)
-    const count = await prisma.issue.count({
+    // Auto-generate the next key from the highest existing project suffix.
+    // Counting records breaks when seed data or deleted records leave gaps:
+    // PAY-101, PAY-102, PAY-103 would otherwise produce PAY-103 again.
+    const existingIssueKeys = await prisma.issue.findMany({
       where: { projectId: input.projectId },
+      select: { issueKey: true },
     });
-    const issueKey = `${project.key}-${count + 100}`;
+    const prefix = `${project.key}-`;
+    const highestIssueNumber = existingIssueKeys.reduce((highest, { issueKey }) => {
+      const suffix = Number.parseInt(issueKey.slice(prefix.length), 10);
+      return Number.isFinite(suffix) ? Math.max(highest, suffix) : highest;
+    }, 99);
+    const issueKey = `${prefix}${highestIssueNumber + 1}`;
 
     const issue = await prisma.issue.create({
       data: {
