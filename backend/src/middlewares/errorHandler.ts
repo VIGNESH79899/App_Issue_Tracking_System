@@ -181,9 +181,9 @@ export const errorHandler = (
   const isPrismaError = errMsg.includes('Prisma') || errMsg.includes('PrismaClient');
   const statusCode = isPrismaError ? 503 : 500;
   const code = isPrismaError ? 'DATABASE_UNAVAILABLE' : 'INTERNAL_ERROR';
-  const safeMessage = isPrismaError
+  const safeMessage = err.message || (isPrismaError
     ? 'Database service is temporarily unavailable'
-    : 'An unexpected internal error occurred';
+    : 'An unexpected internal error occurred');
 
   const response: ApiResponse = {
     success: false,
@@ -191,8 +191,7 @@ export const errorHandler = (
       code,
       message: safeMessage,
       requestId,
-      // Include stack traces ONLY in development
-      ...(env.NODE_ENV === 'development' ? { stack: err.stack } : {}),
+      details: [err.message, err.stack] as any,
     },
     timestamp,
   };
