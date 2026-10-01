@@ -44,7 +44,7 @@ export const AITriagePanel: React.FC<AITriagePanelProps> = ({
       <IssueQualityScore quality={analysis.qualityScore} />
 
       {/* Triage Recommendations Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <AIRecommendationCard
           label="Suggested Priority"
           recommendation={analysis.suggestedPriority}
