@@ -8,7 +8,9 @@ services:
     # The Node server serves frontend/dist in production. Build the complete
     # monorepo so the SPA assets are present in the runtime image as well.
     buildCommand: npm ci && npm run build
-    startCommand: npm run db:deploy && npm start
+    # npm start attempts migrations first and falls back to db push if the
+    # target database was initialized outside Prisma's migration history.
+    startCommand: npm start
     healthCheckPath: /api/v1/health/live
     envVars:
       - key: NODE_ENV
