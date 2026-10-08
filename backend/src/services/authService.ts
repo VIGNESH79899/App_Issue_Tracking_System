@@ -7,6 +7,10 @@ import { env } from '../config/env.js';
 import { ApiError } from '../middlewares/errorHandler.js';
 
 export class AuthService {
+  private hashRefreshToken(token: string) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
   private formatUser(user: any) {
     return {
       id: user.id,
@@ -34,7 +38,9 @@ export class AuthService {
 
     await prisma.refreshToken.create({
       data: {
-        token,
+        // Store only a non-reversible digest. The raw value is returned once
+        // to the client and cannot be recovered from the database.
+        token: this.hashRefreshToken(token),
         userId,
         expiresAt,
       },
@@ -60,7 +66,9 @@ export class AuthService {
         passwordHash,
         firstName: input.firstName,
         lastName: input.lastName,
-        role: input.role || UserRole.REPORTER,
+        // Public registration always creates the least-privileged account.
+        // Administrators assign elevated roles through the protected Users API.
+        role: UserRole.REPORTER,
       },
     });
 
@@ -103,8 +111,9 @@ export class AuthService {
   }
 
   async refresh(token: string) {
+    const tokenHash = this.hashRefreshToken(token);
     const storedToken = await prisma.refreshToken.findUnique({
-      where: { token },
+      where: { token: tokenHash },
       include: { user: true },
     });
 
@@ -129,7 +138,7 @@ export class AuthService {
   async logout(token: string) {
     if (token) {
       await prisma.refreshToken.deleteMany({
-        where: { token },
+        where: { token: this.hashRefreshToken(token) },
       });
     }
     return { success: true };

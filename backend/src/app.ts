@@ -73,8 +73,6 @@ app.use(requestContext);
 app.use(requestLogger);
 
 // ── Static Uploads ────────────────────────────────────────────
-app.use('/uploads', express.static(path.join(process.cwd(), env.UPLOAD_DIR)));
-
 // ── API Routes ────────────────────────────────────────────────
 app.use('/api/v1', apiRouter);
 

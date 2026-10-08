@@ -32,3 +32,12 @@ if (!_env.success) {
 }
 
 export const env = _env.data;
+
+// Development defaults are useful locally, but must never silently become a
+// production signing key.
+if (
+  env.NODE_ENV === 'production' &&
+  env.JWT_SECRET === 'super-secret-jwt-key-replace-in-production-minimum-32-chars'
+) {
+  throw new Error('JWT_SECRET must be explicitly configured in production');
+}

@@ -8,6 +8,7 @@ import * as intelligenceController from '../controllers/intelligenceController.j
 import { authenticateToken, requireRole } from '../middlewares/auth.js';
 import { validateBody } from '../middlewares/validateRequest.js';
 import { uploadMiddleware } from '../middlewares/upload.js';
+import { uploadRateLimiter } from '../middlewares/generalRateLimiter.js';
 
 const router = Router();
 
@@ -46,6 +47,7 @@ router.post('/:id/comments', commentController.createComment);
 router.get('/:id/attachments', attachmentController.getAttachmentsByIssue);
 router.post(
   '/:id/attachments',
+  uploadRateLimiter,
   uploadMiddleware.single('file'),
   attachmentController.uploadAttachment
 );

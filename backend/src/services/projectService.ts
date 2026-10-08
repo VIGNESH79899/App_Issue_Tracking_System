@@ -129,24 +129,42 @@ export class ProjectService {
       throw ApiError.badRequest(`User with ID '${userId}' not found or inactive`);
     }
 
-    const existing = await prisma.projectMember.findUnique({
-      where: {
-        projectId_userId: { projectId, userId },
-      },
-    });
+    // Serializable isolation keeps concurrent assignment requests from
+    // allowing a user to exceed this two-project cap.
+    const member = await prisma.$transaction(
+      async (transaction) => {
+        const existing = await transaction.projectMember.findUnique({
+          where: {
+            projectId_userId: { projectId, userId },
+          },
+        });
 
-    if (existing) {
-      throw ApiError.conflict('User is already a member of this project');
-    }
+        if (existing) {
+          throw ApiError.conflict('User is already a member of this project');
+        }
 
-    const member = await prisma.projectMember.create({
-      data: {
-        projectId,
-        userId,
-        roleInProject: roleInProject as any,
+        // This rule lives in the service rather than only the admin UI, so
+        // every membership entry point follows it.
+        const projectMembershipCount = await transaction.projectMember.count({
+          where: { userId },
+        });
+        if (projectMembershipCount >= 2) {
+          throw ApiError.conflict(
+            'This user is already assigned to the maximum of two projects. Remove an existing project assignment before adding another.'
+          );
+        }
+
+        return transaction.projectMember.create({
+          data: {
+            projectId,
+            userId,
+            roleInProject: roleInProject as any,
+          },
+          include: { user: true },
+        });
       },
-      include: { user: true },
-    });
+      { isolationLevel: 'Serializable' }
+    );
 
     return this.formatProjectMember(member);
   }

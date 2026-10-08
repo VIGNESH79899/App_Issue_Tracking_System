@@ -22,4 +22,10 @@ export const attachmentsApi = {
   deleteAttachment: async (attachmentId: string): Promise<void> => {
     await apiClient.delete(`/attachments/${attachmentId}`);
   },
+
+  downloadAttachment: async (attachmentId: string): Promise<Blob> => {
+    return apiClient.get<never, Blob>(`/attachments/${attachmentId}/download`, {
+      responseType: 'blob',
+    });
+  },
 };

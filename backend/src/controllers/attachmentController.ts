@@ -43,6 +43,18 @@ export const uploadAttachment = async (req: Request, res: Response, next: NextFu
   }
 };
 
+export const downloadAttachment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const attachment = await attachmentService.getDownloadableAttachment(req.user!, req.params.id as string);
+    res.setHeader('Content-Type', attachment.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${attachment.originalName.replace(/["\\r\\n]/g, '_')}"`);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.sendFile(attachment.path);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteAttachment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const id = req.params.id as string;

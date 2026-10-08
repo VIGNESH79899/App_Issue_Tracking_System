@@ -1,8 +1,43 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
+import { authService } from '../services/authService.js';
+import { UserRole } from '@app-issue-track/shared';
 
 describe('Authentication API (/api/v1/auth)', () => {
+  it('always provisions public registrations as REPORTER accounts', async () => {
+    const originalRegister = authService.register;
+    let receivedInput: unknown;
+    authService.register = (async (input: unknown) => {
+      receivedInput = input;
+      return {
+        user: {
+          id: 'new-user',
+          email: 'user@example.com',
+          firstName: 'New',
+          lastName: 'User',
+          role: UserRole.REPORTER,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+      };
+    }) as typeof authService.register;
+
+    const res = await request(app).post('/api/v1/auth/register').send({
+      email: 'user@example.com',
+      password: 'Password123!',
+      firstName: 'New',
+      lastName: 'User',
+      role: UserRole.ADMIN,
+    });
+
+    authService.register = originalRegister;
+    expect(res.status).toBe(201);
+    expect((receivedInput as Record<string, unknown>).role).toBeUndefined();
+  });
   const testEmail = `testuser_${Date.now()}@example.com`;
   let accessToken: string;
   let refreshToken: string;

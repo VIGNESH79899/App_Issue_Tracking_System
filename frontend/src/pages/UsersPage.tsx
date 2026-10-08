@@ -14,6 +14,8 @@ import { SkeletonLoader } from '../components/common/SkeletonLoader';
 import { ErrorState } from '../components/common/ErrorState';
 import { UserCheck, UserX, FolderPlus, AlertCircle, Trash2, Search, Filter, Shield } from 'lucide-react';
 
+const MAX_PROJECTS_PER_USER = 2;
+
 export const UsersPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const toast = useToast();
@@ -91,11 +93,23 @@ export const UsersPage: React.FC = () => {
       return;
     }
 
+    if ((assignUser.projectCount ?? 0) >= MAX_PROJECTS_PER_USER) {
+      toast.error('Assignment Limit Reached', 'A user can be assigned to a maximum of two projects.');
+      return;
+    }
+
     setIsAssigning(true);
     try {
       await teamApi.addProjectMember(selectedProjectId, assignUser.id, roleInProject);
       const proj = projects.find((p) => p.id === selectedProjectId);
       toast.success('User Assigned to Project', `${assignUser.firstName} added to ${proj?.name || 'Project'}.`);
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === assignUser.id
+            ? { ...u, projectCount: Math.min(MAX_PROJECTS_PER_USER, (u.projectCount ?? 0) + 1) }
+            : u
+        )
+      );
       setAssignUser(null);
     } catch (err: any) {
       const msg = err.message || err.response?.data?.error?.message || 'Assignment failed';
@@ -230,14 +244,17 @@ export const UsersPage: React.FC = () => {
                   <th className="py-3 px-4">Email</th>
                   <th className="py-3 px-4">Account Type</th>
                   <th className="py-3 px-4">System Role</th>
+                  <th className="py-3 px-4">Projects</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="w-[260px] min-w-[260px] py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.map((u) => {
                   const isSelf = currentUser?.id === u.id;
                   const isFixture = isTestFixtureUser(u.email);
+                  const projectCount = u.projectCount ?? 0;
+                  const hasReachedProjectLimit = projectCount >= MAX_PROJECTS_PER_USER;
                   return (
                     <tr key={u.id} className="hover:bg-slate-50">
                       <td className="py-3 px-4 font-semibold text-slate-900">
@@ -273,6 +290,17 @@ export const UsersPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4">
+                        <span
+                          className={`inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded border ${
+                            hasReachedProjectLimit
+                              ? 'text-amber-700 bg-amber-50 border-amber-200'
+                              : 'text-slate-700 bg-slate-50 border-slate-200'
+                          }`}
+                        >
+                          {projectCount} / {MAX_PROJECTS_PER_USER}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
                         {u.isActive ? (
                           <span className="inline-flex items-center space-x-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                             <UserCheck className="w-3 h-3" />
@@ -285,38 +313,47 @@ export const UsersPage: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setAssignUser(u)}
-                          leftIcon={<FolderPlus className="w-3 h-3 text-brand-600" />}
-                          disabled={!u.isActive}
-                          title={!u.isActive ? 'Activate account before assigning to a project' : ''}
-                        >
-                          Assign
-                        </Button>
-                        <button
-                          onClick={() => handleToggleStatus(u.id, u.isActive)}
-                          className={`text-xs font-semibold px-2.5 py-1 rounded transition-colors ${
-                            u.isActive
-                              ? 'text-amber-600 hover:bg-amber-50 border border-amber-200'
-                              : 'text-emerald-600 hover:bg-emerald-50 border border-emerald-200'
-                          }`}
-                        >
-                          {u.isActive ? 'Deactivate' : 'Activate'}
-                        </button>
-                        {!isSelf && (
+                      <td className="w-[260px] min-w-[260px] py-3 px-4">
+                        <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setDeleteUserObj(u)}
-                            leftIcon={<Trash2 className="w-3 h-3 text-rose-600" />}
-                            className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                            onClick={() => setAssignUser(u)}
+                            leftIcon={<FolderPlus className="w-3 h-3 text-brand-600" />}
+                            disabled={!u.isActive || hasReachedProjectLimit}
+                            title={
+                              !u.isActive
+                                ? 'Activate account before assigning to a project'
+                                : hasReachedProjectLimit
+                                  ? 'This user is already assigned to two projects'
+                                  : ''
+                            }
+                            className="whitespace-nowrap"
                           >
-                            Delete
+                            Assign
                           </Button>
-                        )}
+                          <button
+                            onClick={() => handleToggleStatus(u.id, u.isActive)}
+                            className={`h-8 whitespace-nowrap rounded-md border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 ${
+                              u.isActive
+                                ? 'border-amber-200 text-amber-600 hover:bg-amber-50'
+                                : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                            }`}
+                          >
+                            {u.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                          {!isSelf && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setDeleteUserObj(u)}
+                              leftIcon={<Trash2 className="w-3 h-3 text-rose-600" />}
+                              className="whitespace-nowrap border-rose-200 text-rose-600 hover:bg-rose-50"
+                            >
+                              Delete
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

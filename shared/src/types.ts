@@ -47,6 +47,8 @@ export interface UserDTO {
   lastName: string;
   role: UserRole;
   isActive: boolean;
+  /** Present in the admin user directory to show the project assignment limit. */
+  projectCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -140,7 +142,7 @@ export interface AttachmentDTO {
   originalName: string;
   mimeType: string;
   fileSize: number;
-  filePath: string;
+  filePath?: string;
   createdAt: string;
 }
 

@@ -28,7 +28,8 @@ services:
       - key: JWT_EXPIRES_IN
         value: 1d
       - key: CORS_ORIGIN
-        value: "*"
+        # Add any approved custom frontend domains as comma-separated origins.
+        value: https://aits-frontend.onrender.com
       - key: UPLOAD_DIR
         value: uploads
       - key: MAX_FILE_SIZE_MB

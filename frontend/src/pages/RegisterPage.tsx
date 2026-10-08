@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/common/Button';
-import { UserRole } from '@app-issue-track/shared';
 import {
   Terminal,
   UserPlus,
@@ -20,7 +19,6 @@ export const RegisterPage: React.FC = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>(UserRole.REPORTER);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,7 +40,7 @@ export const RegisterPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await register({ firstName, lastName, email, password, role });
+      await register({ firstName, lastName, email, password });
       toast.success('Registration Complete', 'Your account has been created successfully.');
       navigate('/');
     } catch (err: any) {
@@ -168,23 +166,6 @@ export const RegisterPage: React.FC = () => {
                   required
                   className="w-full h-10 px-3.5 text-sm bg-slate-900/90 border border-slate-700/80 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all font-mono"
                 />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="role" className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono">
-                  Workspace Role
-                </label>
-                <select
-                  id="role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as UserRole)}
-                  className="w-full h-10 px-3.5 text-sm bg-slate-900/90 border border-slate-700/80 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
-                >
-                  <option value={UserRole.REPORTER}>Reporter / QA</option>
-                  <option value={UserRole.DEVELOPER}>Developer</option>
-                  <option value={UserRole.PROJECT_MANAGER}>Project Manager</option>
-                  <option value={UserRole.ADMIN}>Admin</option>
-                </select>
               </div>
 
               <div className="space-y-1.5">

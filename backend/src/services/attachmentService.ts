@@ -6,6 +6,7 @@ import { ApiError } from '../middlewares/errorHandler.js';
 import { historyService } from './historyService.js';
 import { projectAccessService } from './projectAccessService.js';
 import { JwtPayload } from '../middlewares/auth.js';
+import { env } from '../config/env.js';
 
 export class AttachmentService {
   private formatAttachment(a: any) {
@@ -29,7 +30,6 @@ export class AttachmentService {
       originalName: a.originalName,
       mimeType: a.mimeType,
       fileSize: a.fileSize,
-      filePath: a.filePath,
       createdAt: a.createdAt.toISOString(),
     };
   }
@@ -111,6 +111,30 @@ export class AttachmentService {
     }
 
     await prisma.attachment.delete({ where: { id: attachmentId } });
+  }
+
+  async getDownloadableAttachment(currentUser: JwtPayload, attachmentId: string) {
+    const attachment = await prisma.attachment.findUnique({ where: { id: attachmentId } });
+    if (!attachment) {
+      throw ApiError.notFound(`Attachment with ID '${attachmentId}' not found`);
+    }
+
+    const canAccess = await projectAccessService.canAccessIssue(currentUser, attachment.issueId);
+    if (!canAccess) {
+      throw ApiError.forbidden('You do not have permission to download this attachment');
+    }
+
+    const uploadRoot = path.resolve(process.cwd(), env.UPLOAD_DIR);
+    const resolvedPath = path.resolve(process.cwd(), attachment.filePath);
+    if (!resolvedPath.startsWith(`${uploadRoot}${path.sep}`) || !fs.existsSync(resolvedPath)) {
+      throw ApiError.notFound('Attachment file is unavailable');
+    }
+
+    return {
+      path: resolvedPath,
+      mimeType: attachment.mimeType,
+      originalName: attachment.originalName,
+    };
   }
 }
 

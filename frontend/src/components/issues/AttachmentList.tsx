@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AttachmentDTO, UserRole } from '@app-issue-track/shared';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../common/Button';
+import { attachmentsApi } from '../../services/attachmentsApi';
 import { Paperclip, UploadCloud, FileText, Download, Trash2 } from 'lucide-react';
 
 export interface AttachmentListProps {
@@ -31,6 +32,21 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
     setDragOver(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       onUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDownload = async (attachment: AttachmentDTO) => {
+    try {
+      const file = await attachmentsApi.downloadAttachment(attachment.id);
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = attachment.originalName;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Downloads are protected by the API; the parent page will refresh data
+      // after authorization changes rather than exposing a direct file URL.
     }
   };
 
@@ -88,15 +104,14 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                 </div>
 
                 <div className="flex items-center space-x-2 flex-shrink-0">
-                  <a
-                    href={`/api/v1/attachments/${att.id}`}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(att)}
                     className="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded"
                     title="Download attachment"
                   >
                     <Download className="w-4 h-4" />
-                  </a>
+                  </button>
                   {canDelete && (
                     <button
                       onClick={() => onDelete(att.id)}

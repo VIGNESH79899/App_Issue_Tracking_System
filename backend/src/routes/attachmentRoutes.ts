@@ -6,6 +6,7 @@ const router = Router();
 
 router.use(authenticateToken);
 
+router.get('/:id/download', attachmentController.downloadAttachment);
 router.delete('/:id', attachmentController.deleteAttachment);
 
 export default router;

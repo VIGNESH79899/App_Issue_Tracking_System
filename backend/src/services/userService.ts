@@ -11,6 +11,9 @@ export class UserService {
       lastName: user.lastName,
       role: user.role as UserRole,
       isActive: user.isActive,
+      ...(typeof user._count?.projectMembers === 'number'
+        ? { projectCount: user._count.projectMembers }
+        : {}),
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
@@ -18,6 +21,11 @@ export class UserService {
 
   async getUsers() {
     const users = await prisma.user.findMany({
+      include: {
+        _count: {
+          select: { projectMembers: true },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
     return users.map((u: any) => this.formatUser(u));
