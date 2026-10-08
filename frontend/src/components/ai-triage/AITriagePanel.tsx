@@ -8,9 +8,12 @@ import { Sparkles } from 'lucide-react';
 
 interface AITriagePanelProps {
   analysis: IssueTriageAnalysis;
-  onAcceptPriority?: (val: string) => void;
-  onAcceptSeverity?: (val: string) => void;
-  onAcceptComponent?: (val: string) => void;
+  onAcceptPriority?: (val: string) => void | Promise<boolean | void>;
+  onAcceptSeverity?: (val: string) => void | Promise<boolean | void>;
+  onAcceptComponent?: (val: string) => void | Promise<boolean | void>;
+  acceptedPriority?: boolean;
+  acceptedSeverity?: boolean;
+  acceptedComponent?: boolean;
   onViewIssue?: (issueId: string) => void;
   onContinue?: () => void;
 }
@@ -20,6 +23,9 @@ export const AITriagePanel: React.FC<AITriagePanelProps> = ({
   onAcceptPriority,
   onAcceptSeverity,
   onAcceptComponent,
+  acceptedPriority = false,
+  acceptedSeverity = false,
+  acceptedComponent = false,
   onViewIssue,
   onContinue,
 }) => {
@@ -49,16 +55,19 @@ export const AITriagePanel: React.FC<AITriagePanelProps> = ({
           label="Suggested Priority"
           recommendation={analysis.suggestedPriority}
           onAccept={onAcceptPriority}
+          isAccepted={acceptedPriority}
         />
         <AIRecommendationCard
           label="Suggested Severity"
           recommendation={analysis.suggestedSeverity}
           onAccept={onAcceptSeverity}
+          isAccepted={acceptedSeverity}
         />
         <AIRecommendationCard
           label="Suggested Component"
           recommendation={analysis.suggestedComponent}
           onAccept={onAcceptComponent}
+          isAccepted={acceptedComponent}
         />
       </div>
 

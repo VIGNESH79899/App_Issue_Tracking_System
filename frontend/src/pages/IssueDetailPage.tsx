@@ -65,10 +65,13 @@ export const IssueDetailPage: React.FC = () => {
     if (!issue) return;
     try {
       await issuesApi.updateIssue(issue.id, { priority: val as any });
+      setIssue((current) => (current ? { ...current, priority: val as IssuePriority } : current));
+      issuesApi.getIssueHistory(issue.id).then(setHistory).catch(() => undefined);
       toast.success('Priority Updated', `Set priority to ${val}. Recorded in issue audit history.`);
-      loadIssueDetails();
+      return true;
     } catch (err: any) {
       toast.error('Update Failed', err.message || 'Failed to update priority');
+      return false;
     }
   };
 
@@ -76,10 +79,13 @@ export const IssueDetailPage: React.FC = () => {
     if (!issue) return;
     try {
       await issuesApi.updateIssue(issue.id, { severity: val as any });
+      setIssue((current) => (current ? { ...current, severity: val as IssueSeverity } : current));
+      issuesApi.getIssueHistory(issue.id).then(setHistory).catch(() => undefined);
       toast.success('Severity Updated', `Set severity to ${val}. Recorded in issue audit history.`);
-      loadIssueDetails();
+      return true;
     } catch (err: any) {
       toast.error('Update Failed', err.message || 'Failed to update severity');
+      return false;
     }
   };
 
@@ -87,10 +93,13 @@ export const IssueDetailPage: React.FC = () => {
     if (!issue) return;
     try {
       await issuesApi.updateIssue(issue.id, { moduleComponent: val });
+      setIssue((current) => (current ? { ...current, moduleComponent: val } : current));
+      issuesApi.getIssueHistory(issue.id).then(setHistory).catch(() => undefined);
       toast.success('Component Updated', `Set component to ${val}. Recorded in issue audit history.`);
-      loadIssueDetails();
+      return true;
     } catch (err: any) {
       toast.error('Update Failed', err.message || 'Failed to update component');
+      return false;
     }
   };
 
@@ -555,6 +564,9 @@ export const IssueDetailPage: React.FC = () => {
               onAcceptPriority={handleAcceptPriority}
               onAcceptSeverity={handleAcceptSeverity}
               onAcceptComponent={handleAcceptComponent}
+              acceptedPriority={issue.priority === triageAnalysis.suggestedPriority.value}
+              acceptedSeverity={issue.severity === triageAnalysis.suggestedSeverity.value}
+              acceptedComponent={issue.moduleComponent === triageAnalysis.suggestedComponent.value}
               onViewIssue={(targetId) => navigate(`/issues/${targetId}`)}
             />
           )}

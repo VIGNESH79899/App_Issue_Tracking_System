@@ -7,9 +7,10 @@ import { Check, Edit2, X, Sparkles } from 'lucide-react';
 interface AIRecommendationCardProps {
   label: string;
   recommendation: AITriageRecommendation;
-  onAccept?: (value: string) => void;
+  onAccept?: (value: string) => void | Promise<boolean | void>;
   onEdit?: (value: string) => void;
   onReject?: () => void;
+  isAccepted?: boolean;
 }
 
 export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
@@ -18,12 +19,15 @@ export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
   onAccept,
   onEdit,
   onReject,
+  isAccepted = false,
 }) => {
   const [status, setStatus] = useState<'IDLE' | 'ACCEPTED' | 'REJECTED'>('IDLE');
+  const displayStatus = isAccepted ? 'ACCEPTED' : status;
 
-  const handleAccept = () => {
-    setStatus('ACCEPTED');
-    if (onAccept) onAccept(recommendation.value);
+  const handleAccept = async () => {
+    if (!onAccept) return;
+    const didApply = await onAccept(recommendation.value);
+    if (didApply !== false) setStatus('ACCEPTED');
   };
 
   const handleReject = () => {
@@ -44,19 +48,19 @@ export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
       <div className="min-w-0">
         <span className="block break-words text-lg font-extrabold leading-snug text-slate-900">{recommendation.value}</span>
 
-        {status === 'ACCEPTED' && (
+        {displayStatus === 'ACCEPTED' && (
           <span className="mt-2 inline-flex text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-            Accepted
+            Applied
           </span>
         )}
-        {status === 'REJECTED' && (
+        {displayStatus === 'REJECTED' && (
           <span className="mt-2 inline-flex text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
             Rejected
           </span>
         )}
       </div>
 
-      {status === 'IDLE' && (
+      {displayStatus === 'IDLE' && (
         <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
             {onAccept && (
               <Button
