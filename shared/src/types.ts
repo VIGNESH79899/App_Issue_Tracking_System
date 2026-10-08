@@ -49,6 +49,13 @@ export interface UserDTO {
   isActive: boolean;
   /** Present in the admin user directory to show the project assignment limit. */
   projectCount?: number;
+  /** Present in the admin user directory for managing project assignments. */
+  projectMemberships?: Array<{
+    projectId: string;
+    projectName: string;
+    projectKey: string;
+    roleInProject: UserRole;
+  }>;
   createdAt: string;
   updatedAt: string;
 }

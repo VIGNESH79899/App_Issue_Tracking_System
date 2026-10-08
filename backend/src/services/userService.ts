@@ -14,6 +14,16 @@ export class UserService {
       ...(typeof user._count?.projectMembers === 'number'
         ? { projectCount: user._count.projectMembers }
         : {}),
+      ...(Array.isArray(user.projectMembers)
+        ? {
+            projectMemberships: user.projectMembers.map((membership: any) => ({
+              projectId: membership.projectId,
+              projectName: membership.project.name,
+              projectKey: membership.project.key,
+              roleInProject: membership.roleInProject as UserRole,
+            })),
+          }
+        : {}),
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
@@ -24,6 +34,14 @@ export class UserService {
       include: {
         _count: {
           select: { projectMembers: true },
+        },
+        projectMembers: {
+          include: {
+            project: {
+              select: { name: true, key: true },
+            },
+          },
+          orderBy: { joinedAt: 'asc' },
         },
       },
       orderBy: { createdAt: 'desc' },

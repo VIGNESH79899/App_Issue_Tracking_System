@@ -62,6 +62,13 @@ export const UsersPage: React.FC = () => {
     loadData();
   }, []);
 
+  const openProjectManager = (user: UserDTO) => {
+    setAssignUser(user);
+    const assignedProjectIds = new Set(user.projectMemberships?.map((membership) => membership.projectId) || []);
+    setSelectedProjectId(projects.find((project) => !assignedProjectIds.has(project.id))?.id || '');
+    setRoleInProject(UserRole.DEVELOPER);
+  };
+
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
       const updated = await usersApi.changeUserRole(userId, newRole);
@@ -103,17 +110,48 @@ export const UsersPage: React.FC = () => {
       await teamApi.addProjectMember(selectedProjectId, assignUser.id, roleInProject);
       const proj = projects.find((p) => p.id === selectedProjectId);
       toast.success('User Assigned to Project', `${assignUser.firstName} added to ${proj?.name || 'Project'}.`);
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === assignUser.id
-            ? { ...u, projectCount: Math.min(MAX_PROJECTS_PER_USER, (u.projectCount ?? 0) + 1) }
-            : u
-        )
-      );
-      setAssignUser(null);
+      const membership = {
+        projectId: selectedProjectId,
+        projectName: proj?.name || 'Project',
+        projectKey: proj?.key || '',
+        roleInProject,
+      };
+      const updatedUser = {
+        ...assignUser,
+        projectCount: Math.min(MAX_PROJECTS_PER_USER, (assignUser.projectCount ?? 0) + 1),
+        projectMemberships: [...(assignUser.projectMemberships || []), membership],
+      };
+      setAssignUser(updatedUser);
+      setUsers((prev) => prev.map((u) => (u.id === assignUser.id ? updatedUser : u)));
+      const assignedProjectIds = new Set(updatedUser.projectMemberships.map((item) => item.projectId));
+      setSelectedProjectId(projects.find((project) => !assignedProjectIds.has(project.id))?.id || '');
     } catch (err: any) {
       const msg = err.message || err.response?.data?.error?.message || 'Assignment failed';
       toast.error('Assignment Failed', msg);
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleRemoveFromProject = async (projectId: string) => {
+    if (!assignUser) return;
+
+    setIsAssigning(true);
+    try {
+      await teamApi.removeProjectMember(projectId, assignUser.id);
+      const removedProject = assignUser.projectMemberships?.find((membership) => membership.projectId === projectId);
+      const updatedUser = {
+        ...assignUser,
+        projectCount: Math.max(0, (assignUser.projectCount ?? 0) - 1),
+        projectMemberships: (assignUser.projectMemberships || []).filter((membership) => membership.projectId !== projectId),
+      };
+      setAssignUser(updatedUser);
+      setUsers((prev) => prev.map((u) => (u.id === assignUser.id ? updatedUser : u)));
+      setSelectedProjectId(projectId);
+      toast.success('Project Assignment Removed', assignUser.firstName + ' was removed from ' + (removedProject?.projectName || 'the project') + '.');
+    } catch (err: any) {
+      const msg = err.message || err.response?.data?.error?.message || 'Unable to remove the project assignment';
+      toast.error('Removal Failed', msg);
     } finally {
       setIsAssigning(false);
     }
@@ -318,19 +356,17 @@ export const UsersPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setAssignUser(u)}
+                            onClick={() => openProjectManager(u)}
                             leftIcon={<FolderPlus className="w-3 h-3 text-brand-600" />}
-                            disabled={!u.isActive || hasReachedProjectLimit}
+                            disabled={!u.isActive}
                             title={
                               !u.isActive
                                 ? 'Activate account before assigning to a project'
-                                : hasReachedProjectLimit
-                                  ? 'This user is already assigned to two projects'
-                                  : ''
+                                : 'Add, remove, or replace this user\'s project assignments'
                             }
                             className="whitespace-nowrap"
                           >
-                            Assign
+                            Manage Projects
                           </Button>
                           <button
                             onClick={() => handleToggleStatus(u.id, u.isActive)}
@@ -368,7 +404,7 @@ export const UsersPage: React.FC = () => {
       <Modal
         isOpen={!!assignUser}
         onClose={() => setAssignUser(null)}
-        title={`Assign ${assignUser?.firstName} ${assignUser?.lastName} to Project`}
+        title={`Manage Projects — ${assignUser?.firstName} ${assignUser?.lastName}`}
       >
         <form onSubmit={handleAssignToProject} className="space-y-4 pt-2">
           {!assignUser?.isActive && (
@@ -378,11 +414,55 @@ export const UsersPage: React.FC = () => {
             </div>
           )}
 
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-700">Current projects</span>
+              <span className="font-mono text-[11px] font-bold text-slate-600">
+                {assignUser?.projectCount ?? 0} / {MAX_PROJECTS_PER_USER}
+              </span>
+            </div>
+            {assignUser?.projectMemberships?.length ? (
+              <div className="space-y-2">
+                {assignUser.projectMemberships.map((membership) => (
+                  <div key={membership.projectId} className="flex items-center justify-between gap-3 rounded border border-slate-200 bg-white px-2.5 py-2 text-xs">
+                    <div>
+                      <span className="font-semibold text-slate-900">{membership.projectName}</span>
+                      <span className="ml-1.5 font-mono text-slate-500">({membership.projectKey})</span>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      isLoading={isAssigning}
+                      onClick={() => handleRemoveFromProject(membership.projectId)}
+                      className="h-7 border-rose-200 px-2 text-rose-600 hover:bg-rose-50"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">No project assignments yet.</p>
+            )}
+          </div>
+
+          {(assignUser?.projectCount ?? 0) >= MAX_PROJECTS_PER_USER && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+              This user already has two projects. Remove one above before adding a replacement.
+            </div>
+          )}
+
           <Select
             label="Target Project *"
             value={selectedProjectId}
             onChange={(e) => setSelectedProjectId(e.target.value)}
-            options={projects.map((p) => ({ label: `${p.name} (${p.key})`, value: p.id }))}
+            options={[
+              { label: 'Select a project...', value: '' },
+              ...projects
+                .filter((project) => !assignUser?.projectMemberships?.some((membership) => membership.projectId === project.id))
+                .map((project) => ({ label: `${project.name} (${project.key})`, value: project.id })),
+            ]}
           />
 
           <Select
@@ -400,8 +480,8 @@ export const UsersPage: React.FC = () => {
             <Button type="button" variant="outline" onClick={() => setAssignUser(null)}>
               Cancel
             </Button>
-            <Button type="submit" isLoading={isAssigning} disabled={!assignUser?.isActive}>
-              Confirm Assignment
+            <Button type="submit" isLoading={isAssigning} disabled={!assignUser?.isActive || !selectedProjectId}>
+              Add Project
             </Button>
           </div>
         </form>
