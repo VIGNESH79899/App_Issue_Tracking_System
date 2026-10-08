@@ -33,7 +33,7 @@ export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
 
   return (
     <div className="min-w-0 bg-white border border-slate-200 rounded-xl p-4 shadow-subtle flex flex-col gap-3 transition-shadow hover:shadow-card">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex min-w-0 flex-col items-start gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-brand-600" />
           <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{label}</span>
@@ -42,7 +42,7 @@ export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
       </div>
 
       <div className="min-w-0">
-        <span className="block break-words text-base font-extrabold text-slate-900 font-mono">{recommendation.value}</span>
+        <span className="block break-words text-lg font-extrabold leading-snug text-slate-900">{recommendation.value}</span>
 
         {status === 'ACCEPTED' && (
           <span className="mt-2 inline-flex text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
